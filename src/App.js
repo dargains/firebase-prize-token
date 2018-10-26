@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
-import firebase from 'firebase';
+import firebase from 'firebase/app';
+import 'firebase/app';
+import 'firebase/firestore';
 
 class App extends Component {
   constructor(props) {
@@ -23,6 +25,9 @@ class App extends Component {
     };
     firebase.initializeApp(config);
     const database = firebase.firestore();
+    const settings = {timestampsInSnapshots: true};
+    database.settings(settings);
+
     this.setState({database}, this.getAllTokens);
   }
   getAllTokens() {
@@ -40,10 +45,10 @@ class App extends Component {
     let tokensRef = this.state.database.collection('tokens');
     let queryRef = tokensRef.where('code', '==', code);
     queryRef.get().then(snap => {
-      if (!snap.docs.length) console.log('No such token');
+      if (!snap.docs.length) alert('No such token');
       snap.forEach(item => {
-        if (item.data().prize) console.log('DING DING DING');
-        else console.log('tough luck');
+        if (item.data().prize) alert('DING DING DING');
+        else alert('tough luck');
       })
     });
   }
@@ -63,7 +68,7 @@ class App extends Component {
   }
   render() {
     return (
-      <div className="App" style={{maxWidth:'800px',margin:'0px auto',padding:'40px'}}>
+      <main className="App">
         <div>
           <h3>Prized token?</h3>
           <input type="number" name="myToken" value={this.state.myToken} onChange={this.onNumberChange.bind(this)}/>
@@ -80,7 +85,7 @@ class App extends Component {
           {this.state.tokensList.map(item => <li key={item.code} style={{fontWeight: item.prize ? '700' : '400'}}>{item.code}</li>)}
           </ul>
         </div>
-      </div>
+      </main>
     );
   }
 }
