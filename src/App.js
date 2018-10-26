@@ -8,7 +8,8 @@ class App extends Component {
     this.state = {
       database: {},
       tokensList: [],
-      number: 0
+      includeToken: 0,
+      myToken: 0
     }
   }
   componentDidMount() {
@@ -22,10 +23,7 @@ class App extends Component {
     };
     firebase.initializeApp(config);
     const database = firebase.firestore();
-    this.setState({database}, () => {
-      this.getAllTokens();
-      this.getSingleToken();
-    });
+    this.setState({database}, this.getAllTokens);
   }
   getAllTokens() {
     this.state.database.collection('tokens').get().then(list => {
@@ -37,19 +35,21 @@ class App extends Component {
     });
   }
   getSingleToken() {
-    let code = Math.floor( Math.random() * 1e6 ).toString().padStart(6, "0");
+    //let code = Math.floor( Math.random() * 1e6 ).toString().padStart(6, "0");
+    let code = this.state.myToken;
     let tokensRef = this.state.database.collection('tokens');
     let queryRef = tokensRef.where('code', '==', code);
     queryRef.get().then(snap => {
-      if (!snap.docs.length) console.log('No luck');
+      if (!snap.docs.length) console.log('No such token');
       snap.forEach(item => {
-        console.log('DING DING DING');
+        if (item.data().prize) console.log('DING DING DING');
+        else console.log('tough luck');
       })
     });
   }
   makeNewTokens() {
     const batch = this.state.database.batch();
-    for(let i = 0; i < this.state.number; i++) {
+    for(let i = 0; i < this.state.includeToken; i++) {
       let newDoc = this.state.database.collection('tokens').doc();
       let code = Math.floor( Math.random() * 1e6 ).toString().padStart(6, "0");
       let prize = Math.random() < .1;
@@ -59,18 +59,19 @@ class App extends Component {
     batch.commit();
   }
   onNumberChange(e) {
-    this.setState({number:e.target.value});
+    this.setState({[e.target.name]:e.target.value});
   }
   render() {
     return (
       <div className="App" style={{maxWidth:'800px',margin:'0px auto',padding:'40px'}}>
         <div>
           <h3>Prized token?</h3>
-          <p></p>
+          <input type="number" name="myToken" value={this.state.myToken} onChange={this.onNumberChange.bind(this)}/>
+          <button onClick={this.getSingleToken.bind(this)}>search!</button>
         </div>
         <div>
           <h3>Include tokens</h3>
-          <input type="number" value={this.state.number} onChange={this.onNumberChange.bind(this)}/>
+          <input type="number" name="includeToken" value={this.state.includeToken} onChange={this.onNumberChange.bind(this)}/>
           <button onClick={this.makeNewTokens.bind(this)}>make new tokens!</button>
         </div>
         <div>
