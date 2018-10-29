@@ -31,7 +31,7 @@ class App extends Component {
     this.setState({database}, this.getAllTokens);
   }
   getAllTokens() {
-    this.state.database.collection('tokens').where('prize','==',true).get().then(list => {
+    this.state.database.collection('tokens').get().then(list => {
       const tokensList = [];
       list.forEach(item => {
         tokensList.push(item.data());
