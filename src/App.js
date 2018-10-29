@@ -16,12 +16,12 @@ class App extends Component {
   }
   componentDidMount() {
     var config = {
-      apiKey: "AIzaSyBURMukigLJFCkFkTJGZMi90h7lFi94IqM",
-      authDomain: "fir-prize-token.firebaseapp.com",
-      databaseURL: "https://fir-prize-token.firebaseio.com",
-      projectId: "fir-prize-token",
-      storageBucket: "fir-prize-token.appspot.com",
-      messagingSenderId: "80979270675"
+      apiKey: "AIzaSyDUuAcq_wwLzOt8eENu3PPffuQwHaL90-E",
+      authDomain: "vans-christmas.firebaseapp.com",
+      databaseURL: "https://vans-christmas.firebaseio.com",
+      projectId: "vans-christmas",
+      storageBucket: "vans-christmas.appspot.com",
+      messagingSenderId: "786284440793"
     };
     firebase.initializeApp(config);
     const database = firebase.firestore();
@@ -31,7 +31,7 @@ class App extends Component {
     this.setState({database}, this.getAllTokens);
   }
   getAllTokens() {
-    this.state.database.collection('tokens').get().then(list => {
+    this.state.database.collection('tokens').where('prize','==',true).get().then(list => {
       const tokensList = [];
       list.forEach(item => {
         tokensList.push(item.data());
@@ -53,15 +53,25 @@ class App extends Component {
     });
   }
   makeNewTokens() {
-    const batch = this.state.database.batch();
-    for(let i = 0; i < this.state.includeToken; i++) {
-      let newDoc = this.state.database.collection('tokens').doc();
-      let code = Math.floor( Math.random() * 1e6 ).toString().padStart(6, "0");
-      let prize = Math.random() < .1;
-      let newToken = {code, prize};
-      batch.set(newDoc, newToken);
+    const batchList = [];
+    for (let j = 0; j < 40; j++) {
+
+      const batch = this.state.database.batch();
+      for(let i = 0; i < this.state.includeToken; i++) {
+        let newDoc = this.state.database.collection('tokens').doc();
+        let code = Math.floor( Math.random() * 1e6 ).toString().padStart(6, "0");
+        do {
+          code = Math.floor( Math.random() * 1e6 ).toString().padStart(6, "0");
+        }
+        while(batchList.includes(code));
+        batchList.push(code);
+        let prize = Math.random() < .005;
+        let newToken = {code, prize};
+        batch.set(newDoc, newToken);
+      }
+      batch.commit().then(response => console.log(response))
+      console.log(batchList.length,' tokens uploaded.');
     }
-    batch.commit();
   }
   onNumberChange(e) {
     this.setState({[e.target.name]:e.target.value});
@@ -80,7 +90,7 @@ class App extends Component {
           <button onClick={this.makeNewTokens.bind(this)}>make new tokens!</button>
         </div>
         <div>
-          <h3>All tokens</h3>
+          <h3>All tokens: {this.state.tokensList.length}</h3>
           <ul>
           {this.state.tokensList.map(item => <li key={item.code} style={{fontWeight: item.prize ? '700' : '400'}}>{item.code}</li>)}
           </ul>
